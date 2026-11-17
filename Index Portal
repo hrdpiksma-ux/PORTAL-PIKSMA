@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Portal Karyawan & Laporan Harian | CV. Pik'sma Consultant</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; color: #0F172A; }
+    .card-soft { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 22px; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05); }
+    .gradient-primary { background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 50%, #3B82F6 100%); }
+    .hidden-section { display: none !important; }
+    
+    /* Styling Tombol Menu Khusus Co.Leader & Manager: Hijau Navi dengan Border */
+    .btn-menu-manajerial {
+      background: linear-gradient(135deg, #022C22 0%, #065F46 100%);
+      color: #FFFFFF;
+      border: 2px solid #34D399;
+      box-shadow: 0 4px 14px rgba(6, 95, 70, 0.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- Modal Kustom -->
+  <div id="customModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="card-soft w-full max-w-sm p-6 bg-white shadow-2xl text-center relative overflow-hidden">
+      <div id="modalTopBar" class="absolute top-0 left-0 right-0 h-2 bg-blue-600"></div>
+      <h3 id="modalTitle" class="text-lg font-extrabold text-slate-900 mb-2 mt-2">Pemberitahuan</h3>
+      <p id="modalMessage" class="text-xs text-slate-600 mb-4">Pesan sistem.</p>
+      <a id="modalLinkDoc" href="#" target="_blank" class="hidden block mb-4 text-xs font-bold text-blue-600 underline">Buka Surat Cuti Digital (Google Docs)</a>
+      <button onclick="closeCustomModal()" class="w-full py-3 rounded-xl gradient-primary text-white font-bold text-xs uppercase shadow-md">Mengerti</button>
+    </div>
+  </div>
+
+  <!-- Layar Login -->
+  <div id="loginSection" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50/70 via-slate-50 to-indigo-50/50">
+    <div class="card-soft w-full max-w-md p-8 shadow-2xl">
+      <h1 class="text-xl font-extrabold text-slate-900 mb-1">PIK'SMA PORTAL</h1>
+      <p class="text-xs text-slate-500 mb-6">Civil Engineering & Attendance System</p>
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">User ID</label>
+          <input type="text" id="loginUserId" required placeholder="Contoh: USR-001" class="w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Password</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm outline-none">
+        </div>
+        <button type="submit" id="btnLogin" class="w-full py-3.5 rounded-xl gradient-primary text-white font-bold text-sm shadow-md">Masuk ke Portal</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Layar Utama Dashboard -->
+  <div id="mainSection" class="hidden min-h-screen flex flex-col bg-slate-50 pb-20">
+    <header class="bg-slate-900 border-b sticky top-0 z-30 px-4 py-3 text-white flex justify-between items-center">
+      <div class="font-extrabold text-sm">PIK'SMA CONSULTANT</div>
+      <div class="flex items-center gap-3">
+        <span id="navNama" class="text-xs font-bold">Nama</span>
+        <button onclick="handleLogout()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
+    </header>
+
+    <!-- Navbar Tab -->
+    <div class="bg-white border-b shadow-sm overflow-x-auto">
+      <div class="max-w-6xl mx-auto px-4 flex gap-6 text-xs font-bold whitespace-nowrap">
+        <button onclick="switchTab('presensi')" id="tabBtn-presensi" class="py-3 text-blue-600 border-b-2 border-blue-600">Presensi & Check-Lock</button>
+        <button onclick="switchTab('layanan')" id="tabBtn-layanan" class="py-3 text-slate-500 border-b-2 border-transparent">Pengajuan Cuti & Layanan</button>
+        <button onclick="switchTab('manajerial')" id="tabBtn-manajerial" class="hidden-section py-3 text-emerald-800 border-b-2 border-transparent">Menu Khusus Manajerial</button>
+        <button onclick="switchTab('profil')" id="tabBtn-profil" class="py-3 text-slate-500 border-b-2 border-transparent">Profil & Rekap Gaji</button>
+      </div>
+    </div>
+
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 space-y-6">
+      
+      <!-- TAB 1: PRESENSI -->
+      <section id="section-presensi" class="card-soft p-6 space-y-4">
+        <div class="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold flex items-center gap-3">
+          <i class="fas fa-info-circle text-base text-blue-600"></i>
+          <span id="statusChecklockText">Status: Anda belum melakukan Check-In hari ini. Harap lakukan presensi masuk.</span>
+        </div>
+        <h2 class="text-lg font-bold">Presensi Kehadiran & Pulang</h2>
+        <input type="file" id="cameraInput" accept="image/*" capture="user" class="hidden" onchange="handleSelfieCapture(event)">
+        <button onclick="document.getElementById('cameraInput').click()" class="px-5 py-2.5 rounded-xl gradient-primary text-white font-bold text-xs">Ambil Foto Selfie Masuk</button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <button onclick="handleActionPresensi('MASUK')" class="p-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase shadow-md">Check-In Masuk (Wajib Selfie)</button>
+          <button onclick="handleActionPresensi('PULANG')" class="p-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase shadow-md">Check-Out Pulang (Tanpa Selfie)</button>
+        </div>
+      </section>
+
+      <!-- TAB 2: PENGAJUAN CUTI & LAYANAN -->
+      <section id="section-layanan" class="hidden-section card-soft p-6 space-y-6">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 mb-1">Formulir Pengajuan Cuti Resmi</h2>
+          <p class="text-xs text-slate-500 mb-4">Pengajuan wajib dilakukan minimal 6 hari sebelum tanggal cuti (H-6). Surat cuti digital akan otomatis terbuat.</p>
+          <form onsubmit="handlePengajuanCuti(event)" class="space-y-3 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 uppercase mb-1">Tanggal Mulai Cuti</label>
+                <input type="date" id="cutiMulai" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 uppercase mb-1">Tanggal Selesai Cuti</label>
+                <input type="date" id="cutiSelesai" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none">
+              </div>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Alasan Cuti / Keperluan</label>
+              <textarea id="cutiAlasan" rows="3" required placeholder="Tuliskan keperluan cuti..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl outline-none"></textarea>
+            </div>
+            <button type="submit" class="px-5 py-2.5 rounded-xl gradient-primary text-white font-bold uppercase">Kirim Pengajuan Cuti (H-6)</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- TAB 3: MENU KHUSUS MANAJERIAL (Hijau Navi dengan Border) -->
+      <section id="section-manajerial" class="hidden-section space-y-6">
+        <div class="card-soft p-6 btn-menu-manajerial rounded-2xl">
+          <h2 class="text-lg font-extrabold mb-1"><i class="fas fa-shield-alt"></i> Panel Kontrol Manajerial (Co.Leader & Manager)</h2>
+          <p class="text-xs text-emerald-200">Akses khusus validasi lembur, reimbursement, dan pemantauan tim.</p>
+        </div>
+
+        <!-- Validasi Reimbursement & Form Lembur -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="card-soft p-6 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 border-b pb-2"><i class="fas fa-money-bill-wave text-emerald-600"></i> Form Klaim & Validasi Reimbursement</h3>
+            <form onsubmit="handleReimbursement(event)" class="space-y-3 text-xs">
+              <input type="text" id="rmbKategori" required placeholder="Kategori Biaya (Ex: Operasional / BBM)" class="w-full px-3 py-2 bg-slate-50 border rounded-xl">
+              <input type="number" id="rmbNominal" required placeholder="Nominal (Rp)" class="w-full px-3 py-2 bg-slate-50 border rounded-xl">
+              <textarea id="rmbKet" rows="2" placeholder="Keterangan pengeluaran..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl"></textarea>
+              <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-700 text-white font-bold uppercase">Ajukan Reimbursement</button>
+            </form>
+          </div>
+
+          <div class="card-soft p-6 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 border-b pb-2"><i class="fas fa-clock text-blue-600"></i> Pengajuan & Validasi Lembur Personil</h3>
+            <form onsubmit="handleLemburManajerial(event)" class="space-y-3 text-xs">
+              <input type="text" id="lemburNamaPersonil" required placeholder="Nama Personil yang Lembur" class="w-full px-3 py-2 bg-slate-50 border rounded-xl">
+              <input type="time" id="lemburJam" required class="w-full px-3 py-2 bg-slate-50 border rounded-xl">
+              <textarea id="lemburUraian" rows="2" placeholder="Uraian pekerjaan lembur..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl"></textarea>
+              <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-700 text-white font-bold uppercase">Kirim Notifikasi & Simpan Lembur</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: PROFIL & REKAP GAJI -->
+      <section id="section-profil" class="hidden-section card-soft p-6 space-y-6">
+        <div id="bpjsAlertBox" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-3">
+          <i class="fas fa-exclamation-triangle text-base text-amber-600"></i>
+          <span id="bpjsAlertText">Notifikasi: Usia kerja Anda telah mencapai ≥ 1,5 tahun. Silakan menghadap Manager HRD untuk didaftarkan BPJS.</span>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <img id="profilFotoRender" src="https://via.placeholder.com/80" class="w-20 h-20 rounded-full object-cover border-2 border-blue-500">
+          <div>
+            <h3 id="profilNamaRender" class="text-base font-bold text-slate-900">Nama</h3>
+            <p id="profilJabatanRender" class="text-xs text-slate-500 uppercase">Jabatan</p>
+          </div>
+        </div>
+
+        <div class="border-t pt-4">
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-sm font-bold text-slate-900">Rekap Potongan Salary Berdasarkan Periode Bulan</h4>
+            <select id="selectPeriodeBulan" onchange="loadRekapSalary()" class="px-3 py-1.5 bg-slate-50 border rounded-xl text-xs font-bold">
+              <option value="januari">Januari</option><option value="februari">Februari</option><option value="maret">Maret</option>
+              <option value="april">April</option><option value="mei">Mei</option><option value="juni">Juni</option>
+              <option value="juli">Juli</option><option value="agustus">Agustus</option><option value="september">September</option>
+              <option value="oktober">Oktober</option><option value="november">November</option><option value="desember">Desember</option>
+            </select>
+          </div>
+          <div id="hasilRekapSalary" class="p-4 rounded-xl bg-slate-50 border text-xs font-medium text-slate-700">
+            Pilih periode bulan untuk melihat rincian potongan salary.
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    let CURRENT_USER = null;
+    let LAST_SELFIE = null;
+
+    function showCustomModal(title, msg, docUrl = null) {
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalMessage').innerText = msg;
+      const link = document.getElementById('modalLinkDoc');
+      if (docUrl) {
+        link.href = docUrl;
+        link.classList.remove('hidden');
+      } else {
+        link.classList.add('hidden');
+      }
+      document.getElementById('customModal').classList.remove('hidden');
+    }
+    function closeCustomModal() { document.getElementById('customModal').classList.add('hidden'); }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const userId = document.getElementById('loginUserId').value;
+      const pass = document.getElementById('loginPassword').value;
+      google.script.run
+        .withSuccessHandler(res => {
+          if (res.success) {
+            CURRENT_USER = res.user;
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+            document.getElementById('navNama').innerText = CURRENT_USER.nama;
+            document.getElementById('profilNamaRender').innerText = CURRENT_USER.nama;
+            document.getElementById('profilJabatanRender').innerText = CURRENT_USER.jabatan;
+
+            if (CURRENT_USER.notifBpjs) {
+              document.getElementById('bpjsAlertBox').classList.remove('hidden');
+              document.getElementById('bpjsAlertText').innerText = CURRENT_USER.pesanBpjs;
+            }
+            if (CURRENT_USER.isManagerial) {
+              document.getElementById('tabBtn-manajerial').classList.remove('hidden-section');
+            }
+            loadRekapSalary();
+          } else {
+            showCustomModal("Login Gagal", res.message);
+          }
+        })
+        .loginUser(userId, pass);
+    }
+
+    function switchTab(tabName) {
+      ['presensi', 'layanan', 'manajerial', 'profil'].forEach(t => {
+        document.getElementById('section-' + t).classList.add('hidden-section');
+      });
+      document.getElementById('section-' + tabName).classList.remove('hidden-section');
+    }
+
+    function handleSelfieCapture(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = evt => {
+          LAST_SELFIE = evt.target.result;
+          showCustomModal("Kamera", "Foto selfie berhasil disimpan untuk check-in.");
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleActionPresensi(tipe) {
+      if (tipe === 'MASUK' && !LAST_SELFIE) {
+        showCustomModal("Peringatan", "Wajib mengambil foto selfie untuk presensi masuk!");
+        return;
+      }
+      const payload = {
+        userId: CURRENT_USER.userId,
+        nama: CURRENT_USER.nama,
+        divisi: CURRENT_USER.divisi,
+        jabatan: CURRENT_USER.jabatan,
+        tipe: tipe,
+        lat: -7.9826, lon: 112.6308, acc: 10,
+        photo: LAST_SELFIE
+      };
+      google.script.run
+        .withSuccessHandler(res => {
+          showCustomModal("Presensi", res.message);
+          if (tipe === 'MASUK' && res.success) {
+            document.getElementById('statusChecklockText').innerText = "Status: Anda sudah checklock kehadiran (Aktif).";
+          }
+        })
+        .submitPresensi(payload);
+    }
+
+    function handlePengajuanCuti(e) {
+      e.preventDefault();
+      const payload = {
+        userId: CURRENT_USER.userId,
+        nama: CURRENT_USER.nama,
+        jabatan: CURRENT_USER.jabatan,
+        tanggalMulai: document.getElementById('cutiMulai').value,
+        tanggalSelesai: document.getElementById('cutiSelesai').value,
+        alasan: document.getElementById('cutiAlasan').value
+      };
+      google.script.run
+        .withSuccessHandler(res => {
+          showCustomModal("Pengajuan Cuti", res.message, res.docUrl || null);
+          if (res.success) e.target.reset();
+        })
+        .submitPengajuanCuti(payload);
+    }
+
+    function handleReimbursement(e) {
+      e.preventDefault();
+      const payload = {
+        userId: CURRENT_USER.userId,
+        nama: CURRENT_USER.nama,
+        kategori: document.getElementById('rmbKategori').value,
+        nominal: document.getElementById('rmbNominal').value,
+        keterangan: document.getElementById('rmbKet').value
+      };
+      google.script.run
+        .withSuccessHandler(res => {
+          showCustomModal("Reimbursement", res.message);
+          if (res.success) e.target.reset();
+        })
+        .submitReimbursement(payload);
+    }
+
+    function handleLemburManajerial(e) {
+      e.preventDefault();
+      const payload = {
+        userId: CURRENT_USER.userId,
+        nama: CURRENT_USER.nama,
+        jabatan: CURRENT_USER.jabatan,
+        personil: document.getElementById('lemburNamaPersonil').value,
+        jam: document.getElementById('lemburJam').value,
+        uraian: document.getElementById('lemburUraian').value
+      };
+      showCustomModal("Lembur", "Data lembur personil berhasil divalidasi dan notifikasi terkirim.");
+      e.target.reset();
+    }
+
+    function loadRekapSalary() {
+      const bulan = document.getElementById('selectPeriodeBulan').value;
+      google.script.run
+        .withSuccessHandler(res => {
+          if (res.success) {
+            document.getElementById('hasilRekapSalary').innerText = res.data.statusGaji;
+          }
+        })
+        .getUserProfileData(CURRENT_USER.userId, bulan);
+    }
+
+    function handleLogout() {
+      CURRENT_USER = null;
+      document.getElementById('mainSection').classList.add('hidden');
+      document.getElementById('loginSection').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
